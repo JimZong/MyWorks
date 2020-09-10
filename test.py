@@ -1,4 +1,5 @@
 import argparse
+import random
 from datetime import datetime
 import os
 from tqdm import trange
@@ -18,22 +19,22 @@ parser.add_argument("--num_param", type=int, default=3)
 parser.add_argument("--path_format", type=str, default='%03d.%s')
 parser.add_argument("--npz2vdb_dir", type=str, default='data\\npz2vdb')
 
-parser.add_argument("--src_x_pos", type=float, default=0.2)
+parser.add_argument("--src_x_pos", type=float, default=0.5)
 parser.add_argument("--src_z_pos", type=float, default=0.5)
-parser.add_argument("--src_y_pos", type=float, default=0.15)
-parser.add_argument("--src_inflow", type=float, default=8)
-parser.add_argument("--strength", type=float, default=0.05)
-parser.add_argument("--src_radius", type=float, default=0.12)
+parser.add_argument("--src_y_pos", type=float, default=0.2)
+parser.add_argument("--src_inflow", type=float, default=5)     #flow
+parser.add_argument("--strength", type=float, default=0.05)        #strength of particle spread
+parser.add_argument("--src_radius", type=float, default=0.15)    #src radius
 parser.add_argument("--num_frames", type=int, default=120)
 parser.add_argument("--obstacle", type=bool, default=False)
 
-parser.add_argument("--resolution_x", type=int, default=200)
-parser.add_argument("--resolution_y", type=int, default=300)
-parser.add_argument("--resolution_z", type=int, default=200)
-parser.add_argument("--buoyancy", type=float, default=-4e-3)
-parser.add_argument("--bWidth", type=int, default=1)
-parser.add_argument("--open_bound", type=bool, default=True)
-parser.add_argument("--time_step", type=float, default=0.5)
+parser.add_argument("--resolution_x", type=int, default=128)
+parser.add_argument("--resolution_y", type=int, default=196)
+parser.add_argument("--resolution_z", type=int, default=128)
+parser.add_argument("--buoyancy", type=float, default=4e-8)
+parser.add_argument("--bWidth", type=int, default=0)
+parser.add_argument("--open_bound", type=bool, default=False)
+parser.add_argument("--time_step", type=float, default=0.4)
 parser.add_argument("--adv_order", type=int, default=2)
 parser.add_argument("--clamp_mode", type=int, default=2)
 
@@ -96,7 +97,7 @@ def main():
 
     for t in trange(args.num_frames, desc='sim'):
         source.applyToGrid(grid=density, value=1)
-        source.applyToGrid(grid=vel, value=vec3(args.src_inflow,0,0))
+        source.applyToGrid(grid=vel, value=vec3(random.uniform(-1,1)*args.src_inflow,args.src_inflow,random.uniform(-1,1)*args.src_inflow))
 
         # save density
         copyGridToArrayReal(density, d_)

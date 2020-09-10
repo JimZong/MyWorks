@@ -1,23 +1,49 @@
 import struct
-num = 0
-while 1:
-	#fileName = 'data/smoke_gun/d/'+str(num).zfill(3)+'.npz'
-	inFileName = str(num).zfill(3)+'.npz'
-	outFileName = str(num).zfill(3)+'.vol'
-	try:
-		fin = open(inFileName,'rb')
-	except Exception:
-		print('all finished')
-		break
+import numpy as np
+
+prefix=""
+
+def main():
+	num = 0
+	while npz2vol(prefix+str(num).zfill(3)):
+		num += 1
+	print("complete")
+
+def npz2vol(fileName):
+	inFileName = fileName+'.npz'
+	outFileName = str(fileName).zfill(3)+'.vol'
 	print('processing '+inFileName)
+	try:
+		fin = np.load(inFileName)
+	except Exception:
+		print('read file '+inFileName+' error')
+		return False
 	try:
 		fout = open(outFileName,'wb')
 	except Exception:
-		print("write file error")
-		break
-	fin.seek(3,0)
-	print(struct.unpack('iiiiiiiiii',fin.read(40)))
-	print(struct.unpack('i',fin.read(4)))
+		print("write file "+outFileName+" error")
+		return False
+	d = fin['x']
+	zRes = len(d)
+	yRes = len(d[0])
+	xRes = len(d[0][0])
+	channel = 1
+	#'V''O''L'
+	fout.write("VOL".encode('UTF-8'))
+	#version = 3
+	fout.write(struct.pack('b',3))
+	#encoding identifier
+	fout.write(struct.pack('i',1))
+	#resolution
+	fout.write(struct.pack('iiii',xRes,yRes,zRes,channel))
+	#aabb min max
+	fout.write(struct.pack('ffffff',-0.5,-1.0,-0.5,0.5,1.0,0.5))
+	#data
+	fout.write(d.tobytes())
+
 	fout.close()
 	fin.close()
-	num += 1
+	return True
+
+if __name__ == '__main__':
+	main()
