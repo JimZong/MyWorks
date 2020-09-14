@@ -24,8 +24,8 @@ parser.add_argument("--src_z_pos", type=float, default=0.5)
 parser.add_argument("--src_y_pos", type=float, default=0.2)
 parser.add_argument("--src_inflow", type=float, default=5)     #flow
 parser.add_argument("--strength", type=float, default=0.05)        #strength of particle spread
-parser.add_argument("--src_radius", type=float, default=0.15)    #src radius
-parser.add_argument("--num_frames", type=int, default=120)
+parser.add_argument("--src_radius", type=float, default=0.1)    #src radius
+parser.add_argument("--num_frames", type=int, default=240)
 parser.add_argument("--obstacle", type=bool, default=False)
 
 parser.add_argument("--resolution_x", type=int, default=128)
@@ -33,7 +33,7 @@ parser.add_argument("--resolution_y", type=int, default=196)
 parser.add_argument("--resolution_z", type=int, default=128)
 parser.add_argument("--buoyancy", type=float, default=4e-8)
 parser.add_argument("--bWidth", type=int, default=0)
-parser.add_argument("--open_bound", type=bool, default=False)
+parser.add_argument("--open_bound", type=bool, default=True)
 parser.add_argument("--time_step", type=float, default=0.4)
 parser.add_argument("--adv_order", type=int, default=2)
 parser.add_argument("--clamp_mode", type=int, default=2)
@@ -82,7 +82,15 @@ def main():
 
     radius = gs.x*args.src_radius
     center = gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos)
-    source = s.create(Sphere, center=center, radius=radius)
+    source = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos), radius=radius)
+    source1 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.15,args.src_y_pos,args.src_z_pos), radius=radius*0.4)
+    source2 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.15,args.src_y_pos,args.src_z_pos), radius=radius*0.4)
+    source3 = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos+0.15), radius=radius*0.4)
+    source4 = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos-0.15), radius=radius*0.4)
+    source5 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.106,args.src_y_pos,args.src_z_pos+0.106), radius=radius*0.4)
+    source6 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.106,args.src_y_pos,args.src_z_pos+0.106), radius=radius*0.4)
+    source7 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.106,args.src_y_pos,args.src_z_pos-0.106), radius=radius*0.4)
+    source8 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.106,args.src_y_pos,args.src_z_pos-0.106), radius=radius*0.4)
 
     if args.obstacle:
         obs_radius = gs.x*0.15
@@ -96,8 +104,26 @@ def main():
         #gui.pause()
 
     for t in trange(args.num_frames, desc='sim'):
-        source.applyToGrid(grid=density, value=1)
-        source.applyToGrid(grid=vel, value=vec3(random.uniform(-1,1)*args.src_inflow,args.src_inflow,random.uniform(-1,1)*args.src_inflow))
+        sideStrength=2
+        source.applyToGrid(grid=density, value=1.0)
+        source.applyToGrid(grid=vel,value=vec3(0,1,0))
+        source1.applyToGrid(grid=density, value=1.0)
+        #source.applyToGrid(grid=vel,value=vec3(random.uniform(-1,1)*args.src_inflow,args.src_inflow,random.uniform(-1,1)*args.src_inflow))
+        source1.applyToGrid(grid=vel,value=sideStrength*vec3(0.1,1,0))
+        source2.applyToGrid(grid=density, value=1.0)
+        source2.applyToGrid(grid=vel,value=sideStrength*vec3(-0.1,1,0))
+        source3.applyToGrid(grid=density, value=1.0)
+        source3.applyToGrid(grid=vel,value=sideStrength*vec3(0,1,0.1))
+        source4.applyToGrid(grid=density, value=1.0)
+        source4.applyToGrid(grid=vel,value=sideStrength*vec3(0,1,-0.1))
+        source5.applyToGrid(grid=density, value=1.0)
+        source5.applyToGrid(grid=vel,value=sideStrength*vec3(0.07,1,0.07))
+        source6.applyToGrid(grid=density, value=1.0)
+        source6.applyToGrid(grid=vel,value=sideStrength*vec3(-0.07,1,0.07))
+        source7.applyToGrid(grid=density, value=1.0)
+        source7.applyToGrid(grid=vel,value=sideStrength*vec3(0.07,1,-0.07))
+        source8.applyToGrid(grid=density, value=1.0)
+        source8.applyToGrid(grid=vel,value=sideStrength*vec3(-0.07,1,-0.07))
 
         # save density
         copyGridToArrayReal(density, d_)
