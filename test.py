@@ -1,4 +1,5 @@
 import argparse
+import math
 import random
 from datetime import datetime
 import os
@@ -21,11 +22,11 @@ parser.add_argument("--npz2vdb_dir", type=str, default='data\\npz2vdb')
 
 parser.add_argument("--src_x_pos", type=float, default=0.5)
 parser.add_argument("--src_z_pos", type=float, default=0.5)
-parser.add_argument("--src_y_pos", type=float, default=0.2)
-parser.add_argument("--src_inflow", type=float, default=5)     #flow
-parser.add_argument("--strength", type=float, default=0.05)        #strength of particle spread
+parser.add_argument("--src_y_pos", type=float, default=0.12)
+parser.add_argument("--src_inflow", type=float, default=0.7)     #flow
+parser.add_argument("--strength", type=float, default=0.001)        #strength of particle spread
 parser.add_argument("--src_radius", type=float, default=0.1)    #src radius
-parser.add_argument("--num_frames", type=int, default=240)
+parser.add_argument("--num_frames", type=int, default=480)
 parser.add_argument("--obstacle", type=bool, default=False)
 
 parser.add_argument("--resolution_x", type=int, default=128)
@@ -34,7 +35,7 @@ parser.add_argument("--resolution_z", type=int, default=128)
 parser.add_argument("--buoyancy", type=float, default=4e-8)
 parser.add_argument("--bWidth", type=int, default=0)
 parser.add_argument("--open_bound", type=bool, default=True)
-parser.add_argument("--time_step", type=float, default=0.4)
+parser.add_argument("--time_step", type=float, default=1.2)
 parser.add_argument("--adv_order", type=int, default=2)
 parser.add_argument("--clamp_mode", type=int, default=2)
 
@@ -80,17 +81,32 @@ def main():
     if args.open_bound:
         setOpenBound(flags, args.bWidth,'xXyYzZ', FlagOutflow|FlagEmpty)
 
+    srcNum = 36
     radius = gs.x*args.src_radius
+    srcRadius = 0.4*radius
+    r = (srcRadius + radius)*0.8
+    sideInflow = 2*args.src_inflow
+    bias = 0.6
+    print(radius)
+    print(srcRadius)
     center = gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos)
     source = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos), radius=radius)
-    source1 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.15,args.src_y_pos,args.src_z_pos), radius=radius*0.4)
-    source2 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.15,args.src_y_pos,args.src_z_pos), radius=radius*0.4)
-    source3 = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos+0.15), radius=radius*0.4)
-    source4 = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos-0.15), radius=radius*0.4)
-    source5 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.106,args.src_y_pos,args.src_z_pos+0.106), radius=radius*0.4)
-    source6 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.106,args.src_y_pos,args.src_z_pos+0.106), radius=radius*0.4)
-    source7 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.106,args.src_y_pos,args.src_z_pos-0.106), radius=radius*0.4)
-    source8 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.106,args.src_y_pos,args.src_z_pos-0.106), radius=radius*0.4)
+    sources = []
+    print(gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos))
+    for i in range(srcNum):
+        sources.append(s.create(Sphere, center = gs*vec3(args.src_x_pos, args.src_y_pos,args.src_z_pos)+vec3(r*math.sin(2*math.pi*i/srcNum),0.3*radius,r*math.cos(2*math.pi*i/srcNum)), radius = srcRadius))
+        print(gs*vec3(args.src_x_pos, args.src_y_pos,args.src_z_pos)+vec3(r*math.sin(2*math.pi*i/srcNum),0,r*math.cos(2*math.pi*i/srcNum)))
+
+    '''
+    source1 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.145,args.src_y_pos,args.src_z_pos), radius=radius*0.4)
+    source2 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.145,args.src_y_pos,args.src_z_pos), radius=radius*0.4)
+    source3 = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos+0.145), radius=radius*0.4)
+    source4 = s.create(Sphere, center=gs*vec3(args.src_x_pos,args.src_y_pos,args.src_z_pos-0.145), radius=radius*0.4)
+    source5 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.1025,args.src_y_pos,args.src_z_pos+0.1025), radius=radius*0.4)
+    source6 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.1025,args.src_y_pos,args.src_z_pos+0.1025), radius=radius*0.4)
+    source7 = s.create(Sphere, center=gs*vec3(args.src_x_pos+0.1025,args.src_y_pos,args.src_z_pos-0.1025), radius=radius*0.4)
+    source8 = s.create(Sphere, center=gs*vec3(args.src_x_pos-0.1025,args.src_y_pos,args.src_z_pos-0.1025), radius=radius*0.4)
+    '''
 
     if args.obstacle:
         obs_radius = gs.x*0.15
@@ -104,26 +120,30 @@ def main():
         #gui.pause()
 
     for t in trange(args.num_frames, desc='sim'):
-        sideStrength=2
         source.applyToGrid(grid=density, value=1.0)
-        source.applyToGrid(grid=vel,value=vec3(0,1,0))
+        source.applyToGrid(grid=vel,value=vec3(0,args.src_inflow,0))
+        for i in range(srcNum):
+            sources[i].applyToGrid(grid=density, value=1.0)
+            sources[i].applyToGrid(grid=vel, value=sideInflow*(bias*vec3(random.uniform(-0.5,1)*math.sin(2*math.pi*i/srcNum),0,random.uniform(-0.5,1)*math.cos(2*math.pi*i/srcNum)))+vec3(0,1,0))
+        '''
         source1.applyToGrid(grid=density, value=1.0)
         #source.applyToGrid(grid=vel,value=vec3(random.uniform(-1,1)*args.src_inflow,args.src_inflow,random.uniform(-1,1)*args.src_inflow))
-        source1.applyToGrid(grid=vel,value=sideStrength*vec3(0.1,1,0))
+        source1.applyToGrid(grid=vel,value=sideStrength*vec3(random.uniform(-0.3,1)*0.56,1,0))
         source2.applyToGrid(grid=density, value=1.0)
-        source2.applyToGrid(grid=vel,value=sideStrength*vec3(-0.1,1,0))
+        source2.applyToGrid(grid=vel,value=sideStrength*vec3(random.uniform(-0.3,1)*-0.56,1,0))
         source3.applyToGrid(grid=density, value=1.0)
-        source3.applyToGrid(grid=vel,value=sideStrength*vec3(0,1,0.1))
+        source3.applyToGrid(grid=vel,value=sideStrength*vec3(0,1,random.uniform(-0.3,1)*0.56))
         source4.applyToGrid(grid=density, value=1.0)
-        source4.applyToGrid(grid=vel,value=sideStrength*vec3(0,1,-0.1))
+        source4.applyToGrid(grid=vel,value=sideStrength*vec3(0,1,random.uniform(-0.3,1)*-0.56))
         source5.applyToGrid(grid=density, value=1.0)
-        source5.applyToGrid(grid=vel,value=sideStrength*vec3(0.07,1,0.07))
+        source5.applyToGrid(grid=vel,value=sideStrength*vec3(random.uniform(-0.3,1)*0.4,1,random.uniform(-0.3,1)*0.4))
         source6.applyToGrid(grid=density, value=1.0)
-        source6.applyToGrid(grid=vel,value=sideStrength*vec3(-0.07,1,0.07))
+        source6.applyToGrid(grid=vel,value=sideStrength*vec3(random.uniform(-0.3,1)*-0.4,1,random.uniform(-0.3,1)*0.4))
         source7.applyToGrid(grid=density, value=1.0)
-        source7.applyToGrid(grid=vel,value=sideStrength*vec3(0.07,1,-0.07))
+        source7.applyToGrid(grid=vel,value=sideStrength*vec3(random.uniform(-0.3,1)*0.4,1,random.uniform(-0.3,1)*-0.4))
         source8.applyToGrid(grid=density, value=1.0)
-        source8.applyToGrid(grid=vel,value=sideStrength*vec3(-0.07,1,-0.07))
+        source8.applyToGrid(grid=vel,value=sideStrength*vec3(random.uniform(-0.3,1)*-0.4,1,random.uniform(-0.3,1)*-0.4))
+        '''
 
         # save density
         copyGridToArrayReal(density, d_)
